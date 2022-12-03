@@ -1,3 +1,4 @@
+-- sqlite
 create table rucksacks(
     input TEXT,
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,4 +73,16 @@ FROM (
     SELECT idx as i FROM cnt
 );
 
+-- Part 1 solution:
 select sum(priority) as part1_solution from priorities join rucksacks on duplicated_character=c;
+
+
+-- Part 2
+select sum(priorities.priority) from priorities join (
+    select distinct rci1.rucksack_id, rci2.rucksack_id, rci3.rucksack_id, rci1.c as c
+    from rucksack_compartment_item rci1
+    join rucksack_compartment_item rci2 on (rci1.rucksack_id-1) / 3 == (rci2.rucksack_id-1) / 3 and rci1.c = rci2.c
+    join rucksack_compartment_item rci3 on (rci1.rucksack_id-1) / 3 == (rci3.rucksack_id-1) / 3 and rci1.c = rci3.c
+    where rci1.rucksack_id < rci2.rucksack_id and rci2.rucksack_id < rci3.rucksack_id
+) badges on badges.c=priorities.c
+;
