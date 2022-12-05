@@ -1,60 +1,39 @@
-#! /usr/bin/env swipl
-
 :- use_module(library(dcg/basics)).
 :- use_module(library(pio)).
-% lines([])           --> call(eos), !.
-% lines([Line|Lines]) --> line(Line), lines(Lines).
 
-% eos([], []).
+range_pair(L) -->
+    integer(Start1), "-", integer(End1), ",", integer(Start2), "-", integer(End2), ("\n"; eos),
+    {L = [range{start: Start1, end: End1}, range{start: Start2, end: End2}]}
+.
 
-% line([])     --> ( "\n" ; call(eos) ), !.
-% line([[range{start: S1, end: E1}, range{start: S2, end: E2}]|Ls]) --> [integer(S1), "-", integer(E1), ",", integer(S2), "-", intgers(E2)], line(Ls).
+range_file([]) --> eos, !.
 
-% :- initialization phrase_from_file(lines(Ls), 'input2'), writeln(Ls), halt.
-% foo(X, Y) --> integer(X), "-", integer(Y).
+range_file([Ranges|L]) --> range_pair(Ranges), range_file(L).
 
-% lines([])           --> call(eos), !.
-% lines([Line|Lines]) --> line(Line), lines(Lines).
+fully_contained([R1, R2]) :-
+    (R1.start >= R2.start, R1.end =< R2.end, !);
+    (R2.start >= R1.start, R2.end =< R1.end, !).
 
-% eos([], []).
+overlaps([R1, R2]) :-
+    R1.start =< R2.end, R2.start =< R1.end.
 
-% line([])     --> ( "\n" ; call(eos) ), !.
-% line([L|Ls]) --> [L], line(Ls).
-% :- initialization phrase_from_file(lines(Ls), 'input'), writeln(Ls), halt.
-% :- use_module(library(dcg/basics)).
+num_fully_contained(RangePairList, Num) :-
+    findall(X, (member(X, RangePairList), fully_contained(X)), FullyContained),
+    length(FullyContained, Num).
 
-% foo(X, Y) :-  Y is integer(X).
-id([Id]) --> [Id].
-id([Id|Ids]) --> [Id,'(', ids(Ids), ')'].
+num_overlap(RangePairList, Num) :-
+    findall(X, (member(X, RangePairList), overlaps(X)), Overlaps),
+    length(Overlaps, Num).
 
-% ids([Id]) --> [Id].
-% ids([Id|Ids]) --> [Id], ids(Ids).
+part1(RangePairs) :-
+    num_fully_contained(RangePairs, Num),
+    writeln("Part 1:"),
+    writeln(Num).
+
+part2(RangePairs) :-
+    num_overlap(RangePairs, Num),
+    writeln("Part 2:"),
+    writeln(Num).
 
 
-% The DCG grammar for parsing a comma-delimited string of integers
-% into a list of integers.
-
-integer_list(L) -->
-    integer(I),
-    (",", integer_list(T), {L = [I|T]} ; {L = [I]}).
-
-integer(I) -->
-    digit(D0),
-    digits(D),
-    {number_codes(I, [D0|D])}.
-
-digits([D|T]) -->
-    digit(D),
-    !,
-    digits(T).
-digits([]) --> [].
-
-digit(D) -->
-    [D],
-    {code_type(D, digit)}.
-
-% Example usage of the DCG grammar.
-
-parse_integer_string(String, List) :-
-    string_codes(String, Codes),
-    phrase(integer_list(List), Codes).
+:- initialization phrase_from_file(range_file(RangePairs), "input"), part1(RangePairs), part2(RangePairs), halt.
