@@ -27,8 +27,39 @@ def solve(fname):
             tops += g.pop(col)[0][1]
         except ValueError as e:
             print(repr(e))
+    part1_solution = f"Part 1: {tops}"
+
+
+    g = Grid("\n".join(reversed(grid_text.split("\n"))) + "\n")
+    g.show()
+    grids = [g]
+    for i, command in enumerate(commands.strip().split("\n")):
+        num, from_col, to_col = map(int, re.findall(r"move (\d+) from (\d+) to (\d+)", command)[0])
+        acc = []
+        while num > 0:
+            item, g = g.pop(from_col)
+            acc.append(item)
+            grids.append(g)
+            os.system('clear')
+            g.show(fixed=True)
+            print_there(0, 0, f"Executing command {i}: move {num} from {from_col} to {to_col}")
+            num -= 1
+            beat(0)
+        for item in reversed(acc):
+            g = g.push(to_col,item)
+        
+    tops = ""
+    for col in range(1, g.cols + 1):
+        try:
+            tops += g.pop(col)[0][1]
+        except ValueError as e:
+            print(repr(e))
+    part2_solution = f"Part 2: {tops}"
+
+
     os.system('clear')
-    print(f"Part 1: {tops}")
+    print(part1_solution)
+    print(part2_solution)
         
     return grids
 
