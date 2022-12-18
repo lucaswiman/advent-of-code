@@ -1,0 +1,5 @@
+<input href="file:///app/input" />
+<!--
+    Can be overridden with INPUT_FILE environment variable.
+    See https://stackoverflow.com/questions/8189689/reading-environment-variables-in-an-xslt-stylesheet-with-saxon
+-->
