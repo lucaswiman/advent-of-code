@@ -1,5 +1,5 @@
 <!-- https://dnovatchev.wordpress.com/2007/11/09/wide-finder-in-xslt-deriving-new-requirements-for-efficiency-in-xslt-processors/ -->
-<xsl:stylesheet
+<xsl:transform
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     version="3.0"
     expand-text="yes"
@@ -19,7 +19,7 @@
 
   <xsl:template match="/" mode="lex">
     <xsl:variable name="vLines"
-      select="tokenize(unparsed-text('file:///app/example'),'\n')"
+      select="tokenize(unparsed-text('file:///app/input'),'\n')"
     />
     <xsl:for-each
       select="for $line in $vLines return $line"
@@ -70,7 +70,7 @@
 
     <!-- <xsl:value-of select="ext:node-set($lexed)/*"/>
     <xsl:value-of select="$lexed" /> -->
-    <xsl:for-each-group select="$lexed" group-starting-with="cmd[@instruction = 'cd']" >
+    <!-- <xsl:for-each-group select="$lexed" group-ending-with="cmd[@instruction = 'cd' and @dir='..']" >
       <cmd-with-output>
         <xsl:for-each select="current-group()">
           <xsl:copy>
@@ -78,8 +78,31 @@
           </xsl:copy>
         </xsl:for-each>
       </cmd-with-output>
-    </xsl:for-each-group>
+    </xsl:for-each-group> -->
+    <xsl:for-each select="$lexed">
+      <xsl:choose>
+        <xsl:when test="name()='cmd' and @instruction='cd'">
+          <xsl:choose>
+          <xsl:when test="@dir='..'">
+            <xsl:text disable-output-escaping="yes">&#10;&lt;/dirgroup&gt;&#10;</xsl:text>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:text disable-output-escaping="yes">&#10;&lt;dirgroup&gt;&#10;</xsl:text>
+            <xsl:copy>
+              <xsl:apply-templates select="@*|node()" />
+            </xsl:copy>
+          </xsl:otherwise>
+          </xsl:choose>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:copy>
+            <xsl:apply-templates select="@*|node()" />
+          </xsl:copy>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:for-each>
+    <xsl:text disable-output-escaping="yes">&#10;&lt;/dirgroup&gt;&#10;</xsl:text>
   </xsl:template>
 
 
-</xsl:stylesheet>
+</xsl:transform>
